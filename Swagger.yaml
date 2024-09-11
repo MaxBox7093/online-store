@@ -1,0 +1,245 @@
+openapi: 3.0.3
+info:
+  title: Интернет-магазин
+  version: 0.0.1
+servers:
+  - url: http://localhost:8080/api/v1/
+    description: Dev server
+paths:
+  /items:
+    get:
+      summary: Метод для получения списка товаров
+      tags:
+        - Items
+      operationId: getAllItems
+      responses:
+        '200':
+          description: Успешный ответ со списком товаров
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Items"
+        '400':
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: 400
+                message: "Параметры запроса некорректны"
+        '404':
+          description: Товары не найдены
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: 404
+                message: "Товары не найдены"
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: 500
+                message: "Ошибка на сервере. Повторите попытку позже"
+  /item/{id}:
+    get:
+      summary: Метод для получения полной информации о товаре
+      tags:
+        - Items
+      operationId: getItemById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Идентификатор товара формата GUID
+          schema:
+            type: string
+          example: b0d4ce5d-2757-4699-948c-cfa72ba94f86
+      responses:
+        '200':
+          description: Успешный ответ с информацией о товаре
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemDetails"
+        '400':
+          description: Неправильный идентификатор товара
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: 400
+                message: "Идентификатор товара имеет неправильный формат"
+        '404':
+          description: Товар не найден
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: 404
+                message: "Товар с указанным идентификатором не найден"
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: 500
+                message: "Ошибка на сервере. Повторите попытку позже"
+  /cart:
+    post:
+      summary: Добавление товара в корзину
+      tags:
+        - Cart
+      operationId: addItemToCart
+      requestBody:
+        description: Данные для добавления товара в корзину
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddToCart"
+      responses:
+        '200':
+          description: Товар успешно добавлен в корзину
+          content:
+            application/json:
+              example:
+                message: "Товар успешно добавлен в корзину"
+        '400':
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: 400
+                message: "Некорректные данные в запросе"
+        '404':
+          description: Товар не найден
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: 404
+                message: "Товар с указанным идентификатором не найден"
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: 500
+                message: "Ошибка на сервере. Повторите попытку позже"
+
+components:
+  schemas:
+    Item:
+      type: object
+      required:
+        - id
+        - name
+        - price
+        - imageUrl
+      properties:
+        id:
+          type: string
+          example: b0d4ce5d-2757-4699-948c-cfa72ba94f86
+          description: Уникальный идентификатор формата GUID
+        name:
+          type: string
+          example: Рюкзак городской черный для ноутбука
+          description: Наименование товара
+        price:
+          type: integer
+          example: 5800
+          description: Цена товара без учета скидки
+        discount:
+          type: integer
+          example: 70
+          description: Процент скидки на товар
+        discountedPrice:
+          type: integer
+          example: 1740
+          description: Цена товара с учетом скидки
+        imageUrl:
+          type: string
+          example: https://example.com/images/item1.jpg
+          description: URL изображения товара
+
+    Items:
+      type: array
+      items:
+        $ref: "#/components/schemas/Item"
+        
+    ItemDetails:
+      allOf:
+        - $ref: '#/components/schemas/Item'
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - price
+      properties:
+        imageUrls:
+          type: array
+          items:
+            type: string
+          example:
+            - https://example.com/images/item2.jpg
+            - https://example.com/images/item3.jpg
+            - https://example.com/images/item4.jpg
+          description: Массив дополнительных ссылок на изображения товара
+        type:
+          type: string
+          example: Сумки и аксессуары
+          description: Категория товара
+        description:
+          type: string
+          example: Чёрный рюкзак с лаконичным дизайном. Подходит для повседневного использования.
+          description: Полное описание товара
+
+    AddToCart:
+      type: object
+      required:
+        - itemId
+        - quantity
+      properties:
+        itemId:
+          type: string
+          example: b0d4ce5d-2757-4699-948c-cfa72ba94f86
+          description: Идентификатор товара формата GUID
+        quantity:
+          type: integer
+          example: 1
+          description: Количество товара для добавления в корзину
+
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+          example: 404
+          description: HTTP код ошибки
+        message:
+          type: string
+          example: "Товары не найдены"
+          description: Описание ошибки
+        details:
+          type: string
+          example: "Не найдено ни одного товара в базе данных"
+          description: Дополнительная информация об ошибке (опционально)
